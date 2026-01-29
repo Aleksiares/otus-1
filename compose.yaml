@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: otus_user
+      POSTGRES_PASSWORD: otus_password
+      POSTGRES_DB: otus_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./tmp/postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U otus_user -d otus_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: migrations
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_DSN: "postgresql://otus_user:otus_password@postgres:5432/otus_db"
+    command:
+      - alembic
+      - upgrade
+      - head
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - migrations
+    environment:
+      POSTGRES_DSN: "postgresql://otus_user:otus_password@postgres:5432/otus_db"
+    ports:
+      - "8000:8000"

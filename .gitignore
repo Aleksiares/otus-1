@@ -1,0 +1,18 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+PyCharm files
+.idea
+
+# Virtual environments
+.venv
+
+.coverage
+/docs
+tmp/
+local.env
